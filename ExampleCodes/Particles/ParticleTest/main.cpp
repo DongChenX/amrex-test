@@ -4,7 +4,7 @@
 #include <AMReX_ParmParse.H>
 #include <AMReX_MultiFab.H>
 
-#include "CellSortedPC.H"
+#include"ParticleTest.H"
 
 using namespace amrex;
 
@@ -92,6 +92,8 @@ int main(int argc, char* argv[])
     pp.get("nsteps", parms.nsteps);
 
     test_cell_sorted(parms);
+
+     Kernel s;
 
     amrex::Finalize();
 }
