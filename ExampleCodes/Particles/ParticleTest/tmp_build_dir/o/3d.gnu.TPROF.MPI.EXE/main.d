@@ -120,7 +120,7 @@ tmp_build_dir/o/3d.gnu.TPROF.MPI.EXE/main.o: main.cpp \
  ../../../../amrex/Src/Base/AMReX_PCI.H \
  ../../../../amrex/Src/Base/AMReX_FabArrayUtility.H \
  ../../../../amrex/Src/Base/AMReX_NonLocalBC.H \
- ../../../../amrex/Src/Base/AMReX_NonLocalBCImpl.H CellSortedPC.H \
+ ../../../../amrex/Src/Base/AMReX_NonLocalBCImpl.H ParticleTest.H \
  ../../../../amrex/Src/Particle/AMReX_Particles.H \
  ../../../../amrex/Src/Particle/AMReX_ParticleContainerBase.H \
  ../../../../amrex/Src/Particle/AMReX_ParGDB.H \
@@ -283,7 +283,7 @@ tmp_build_dir/s/3d.gnu.TPROF.MPI.EXE/AMReX_Config.H:
 ../../../../amrex/Src/Base/AMReX_FabArrayUtility.H:
 ../../../../amrex/Src/Base/AMReX_NonLocalBC.H:
 ../../../../amrex/Src/Base/AMReX_NonLocalBCImpl.H:
-CellSortedPC.H:
+ParticleTest.H:
 ../../../../amrex/Src/Particle/AMReX_Particles.H:
 ../../../../amrex/Src/Particle/AMReX_ParticleContainerBase.H:
 ../../../../amrex/Src/Particle/AMReX_ParGDB.H:

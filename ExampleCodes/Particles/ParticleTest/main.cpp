@@ -93,7 +93,5 @@ int main(int argc, char* argv[])
 
     test_cell_sorted(parms);
 
-     Kernel s;
-
     amrex::Finalize();
 }
