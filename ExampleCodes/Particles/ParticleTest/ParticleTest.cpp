@@ -2,13 +2,14 @@
 #include <AMReX_MultiFabUtil.H>
 
 #include <AMReX_RealVect.H>
-
+#include <cmath>
 #include "ParticleTest.H"
 
 #include<iostream>
 
 using namespace amrex;
 
+# define PI 3.1415926535
 
 void nodal_phi_to_pvf(MultiFab& pvf, const MultiFab& phi_nodal){
     //pvf是cell-centre的网格
@@ -89,4 +90,54 @@ void deltaFunction(Real xf, Real xp, Real h, Real& value, DELTA_FUNCTION_TYPE ty
     default:
         break;
     }
+}
+
+
+
+//其他有用的一些函数
+[[nodiscard]] AMREX_FORCE_INLINE
+//计算一个球的转动惯量
+Real cal_momentum(Real rho, Real radious)
+{
+    return  (8.0/15.0)*PI*rho*radious*radious*radious*radious*radious;
+}
+
+
+//将力插值到临近的欧拉点上
+template <typename P>
+AMREX_GPU_HOST_DEVICE AMREX_FORCE_INLINE
+void ForceSpreading_cic (P const& p,
+                  ParticleReal fxP,
+                  ParticleReal fyP,
+                  ParticleReal fzP,
+                  Array4<Real> const& E,
+                  int EularFIndex,
+                  GpuArray<Real,AMREX_SPACEDIM> const& plo,
+                  GpuArray<Real,AMREX_SPACEDIM> const& dx,
+                  DELTA_FUNCTION_TYPE type)
+{
+    const Real d = dx[0]*dx[1]*dx[2]; //计算欧拉网格的体积
+
+    //计算拉格朗日点所在的网格
+    Real lx = (p.pos(0) - plo[0]) / dx[0];
+    Real ly = (p.pos(1) - plo[1]) / dx[1];
+    Real lz = (p.pos(2) - plo[2]) / dx[2];
+
+    //向下取整，获取
+    int index_i = static_cast<int>(std::floor(lx));
+    int index_j = static_cast<int>(std::floor(ly));
+    int index_k = static_cast<int>(std::floor(lz));
+
+    for(int ii = index_i-2;ii<=index_i+2;ii++)
+    {
+        for(int jj = index_j-2;jj<=index_j+2;jj++)
+        {
+            for(int kk = index_k-2;kk<=index_k+2;kk++)
+            {
+                //计算欧拉网格的中心坐标
+                
+            }
+        }
+    }
+
 }
