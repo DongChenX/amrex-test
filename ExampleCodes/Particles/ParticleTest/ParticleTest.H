@@ -35,12 +35,12 @@ enum DELTA_FUNCTION_TYPE{
 struct kernel{
     RealVect velocity;
     RealVect location;
-    RealVect omega; //
-    RealVect varphi; //该物理量作用存疑
+    RealVect omega; //颗粒的角速度
+    RealVect varphi; //颗粒的累积角位移
     Real rho;
     Real radious;
-    Real ml; //暂时存疑
-    Real dv; //颗粒体积
+    Real ml; //拉式点的总数
+    Real dv; //每个marker代表的积分权重，拉式点的体积
 };
 
 
@@ -137,6 +137,7 @@ class mParticle : public ParticleContainer<0, 0, numAttr>{
         void ForceSpreading(amrex::MultiFab &Euler, DELTA_FUNCTION_TYPE type);
 
         void UpdateParticles(const amrex::MultiFab& Euler, kernel& kernel, Real dt, Real alpha_k ); //更新颗粒物的信息
+        
         void ComputeLagrangianForce(Real dt, const kernel& kernel); //计算拉氏力
 
 };
