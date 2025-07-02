@@ -204,10 +204,41 @@ void VelocityInterpolation_cir(P const& p, Real& Up, Real& Vp, Real& Wp,
 //mParticle的成员函数
 void mParticle::InteractWithEuler(MultiFab &Euler, int loop_time, Real dt, Real alpha_k, DELTA_FUNCTION_TYPE type)
 {
-    for(auto it = particle_kernels.begin(); it != particle_kernels().end(); it++)
+    // for(auto it = particle_kernels.begin(); it != particle_kernels().end(); it++)
+    // {
+    //     InitialWithLargrangianPoints(*it)
+    // }
+    Vector<kernel>::iterator it;
+    for(it = particle_kernels.begin();it != particle_kernels.end();it++)
     {
-        InitialWithLargrangianPoints(*it);
-    }
+        InitialWithLargrangianPoin(*it);
+
+        UpdateParticles(Euler, kernel, dt, alpha_k); //这句代码作用存疑
+
+        const int EulerForceIndex = euler_force_index;
+
+        while(loop_time > 0)
+        {
+            for(amrex::MFIter mfi(Euler); mfi.isValid(); ++mfi){
+                const auto& bx = mfi.validbox();
+                const auto& mf_array = Euler.array(mfi);
+                amrex::ParallelFor(bx, [mf_array, EulerForceIndex] 
+                AMREX_GPU_DEVICE(int i, int j, int k){
+                    mf_array(i,j,k,EulerForceIndex  ) = 0.0;//+ std::exp(-r_squared);
+                    mf_array(i,j,k,EulerForceIndex+1) = 0.0;
+                    mf_array(i,j,k,EulerForceIndex+2) = 0.0;
+                }); //对欧拉长的颗粒反作用力置为0
+
+            }
+
+            VelocityInterpolation(Euler, type);
+            ComputeLagrangianForce(dt, kernel);
+            ForceSpreading(Euler, type);
+
+        }
+
+}
+
 }
 
 
@@ -301,6 +332,8 @@ void mParticle::InitialWithLargrangianPoints(const kernel& current_kernel){
         }else {
             phiK = std::fmod( phiK + 3.809 / std::sqrt(current_kernel.ml) / std::sqrt( 1 - Math::powi<2>(Hk)) , 2 * Math::pi<Real>());
         }
+
+        //这里有bug，相当于锁死了颗粒的中心在0.5 0.5 0.5这个点
         particles[index].pos(0) = 0.5 + current_kernel.radious * std::sin(thetaK) * std::cos(phiK);
         particles[index].pos(1) = 0.5 + current_kernel.radious * std::sin(thetaK) * std::sin(phiK);
         particles[index].pos(2) = 0.5 + current_kernel.radious * std::cos(thetaK);
@@ -327,6 +360,58 @@ void mParticle::InitialWithLargrangianPoints(const kernel& current_kernel){
 //     }
 // }
 
+
+
+void mParticle::UpdateParticles(const amrex::MultiFab& Euler, kernel& kernel, Real dt, Real alpha_k)
+{
+    const auto& gm = m_gdb->Geom(euler_finest_level);
+    auto plo = gm.ProbLoArray();
+    auto dxi = gm.InvCellSizeArray();
+
+    //计算颗粒体积力，并累加到颗粒中心
+    for(mParIter pti(*this, euler_finest_level); pti.isValid(); ++pti){
+        //首先获取颗粒的信息
+        auto& particles = pti.GetArrayOfStructs();
+        auto *p_tr = particles.data();
+        auto& attri = pti.GetAttribs();
+
+        auto *Fxp = attri[P_attr::Fx_marker];
+        auto *Fyp = attti[P_attr::Fy_marker];
+        auto *Fzp = attri[P_attr::Fz_marker];
+        auto *Up = attri[P_attr::U_marker];
+        auto *Vp = attri[P_attr::V_marker];
+        auto *Wp = attri[P_attr::W_marker];//获取所有颗粒的数据的指针，便于后期修改所有的颗粒属性值
+
+        const Real Dv = kernel.dv;
+        const Long np = pti.numParticles(); //提取其他属性
+
+        RealVect ForceDv{std::vector<Real>{0.0,0.0,0.0}};
+        RealVect Moment{std::vector<Real>{0.0,0.0,0.0}}; //力和动量
+
+        auto *ForceDv_ptr  = &ForceDv;
+        auto *Moment_ptr   = &Moment;
+        auto *location_ptr = &kernel.location;
+        auto *omega_ptr    = &kernel.omega;
+        auto *velocity_ptr = &kernel.velocity;
+        auto *varphi_ptr   = &kernel.varphi;
+
+        const Real rho_p = kernel.rho;
+
+        //进入一个循环，计算所有拉式点的总力
+        amrex::ParallelFor(np, [=] 
+        AMREX_GPU_DEVICE (int i) noexcept{
+
+
+            //calculate the force
+            //find current particle's lagrangian marker
+            
+
+
+        });
+
+
+    }
+}
 
 void mParticle::WriteParticleFile(int index)
 {
