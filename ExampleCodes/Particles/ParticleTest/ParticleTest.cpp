@@ -404,8 +404,8 @@ void mParticle::UpdateParticles(const amrex::MultiFab& Euler, kernel& kernel, Re
 
             //calculate the force
             //find current particle's lagrangian marker
-            
-
+            //calculate the total force infect on a single particle
+            //calculate the total momentum on a single particle
 
         });
 
