@@ -6,6 +6,12 @@
 
 #include <AMReX_RealVect.H>
 
+#include<iostream>
+#include<fstream>
+#include<string>
+#include<cmath>
+#include<vector>
+
 using namespace amrex;
 
 AMREX_INLINE AMREX_GPU_DEVICE //启动GPU并行计算
@@ -41,6 +47,19 @@ struct kernel{
     Real radious;
     Real ml; //拉式点的总数
     Real dv; //每个marker代表的积分权重，拉式点的体积
+};
+
+
+struct Particledata{
+    std::vector<Real> particleX;
+    std::vector<Real> particleY;
+    std::vector<Real> particleZ;
+    std::vector<Real> particleU;
+    std::vector<Real> particleV;
+    std::vector<Real> particleW;
+    std::vector<Real> particleFx;
+    std::vector<Real> particleFy;
+    std::vector<Real> particleFz;
 };
 
 
@@ -110,11 +129,19 @@ class mParticle : public ParticleContainer<0, 0, numAttr>{
                        const Vector<Real>& y,
                        const Vector<Real>& z,
                        Real rho_s,
-                       int radious);  //x, y, z都是拉氏点的坐标， rho_s是颗粒的密度， radius是颗粒的半径，这些是计算颗粒表面拉氏点的关键位置
+                       Real radious);  //x, y, z都是拉氏点的坐标， rho_s是颗粒的密度， radius是颗粒的半径，这些是计算颗粒表面拉氏点的关键位置
 
-    void InteractWithEuler(MultiFab &Euler, int loop_time = 20, Real dt = 0.1, Real alpha_k = 0.5, DELTA_FUNCTION_TYPE type = FOUR_POINT_IB); //将颗粒边界上的信息插值到附近的拉氏点上面
+    void InteractWithEuler(MultiFab &Euler, int loop_time, Real dt, Real alpha_k, DELTA_FUNCTION_TYPE type); //将颗粒边界上的信息插值到附近的拉氏点上面
 
     void WriteParticleFile(int index); //写入颗粒的信息
+
+    void WriteVTKFile(const std::string& filename); //写入VTK格式文件
+
+    void WriteVTKFileSimple(const std::string& filename); //简化的VTK输出（单进程）
+
+    void PrintData(MultiFab &Euler);
+
+    void WriteParticledata(int index);
 
 
     private:
@@ -138,7 +165,7 @@ class mParticle : public ParticleContainer<0, 0, numAttr>{
 
         void UpdateParticles(const amrex::MultiFab& Euler, kernel& kernel, Real dt, Real alpha_k ); //更新颗粒物的信息
         
-        void ComputeLagrangianForce(Real dt, const kernel& kernel); //计算拉氏力
+        void ComputeLagrangianForce(Real dt, const kernel& kernel,int index); //计算拉氏力
 
 };
 #endif // 
